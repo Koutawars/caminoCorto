@@ -118,6 +118,15 @@ int main()
 					seMueve = true;
 				}
 			}
+			else if (c == 57) {
+				if (player.first - 1 > -1 && player.second + 1 < ancho) {
+					mapa[player.first][player.second] = ' ';
+					player.first = player.first - 1;
+					player.second = player.second + 1;
+					mapa[player.first][player.second] = pChar;
+					seMueve = true;
+				}
+			}
 			if (seMueve) {
 				// mover ia
 				mapa[ia.first][ia.second] = iaChar;
