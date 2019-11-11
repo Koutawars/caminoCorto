@@ -7,7 +7,7 @@ Camino::Camino()
 	this->pasos = std::vector <std::pair<int, int>>();
 }
 
-Camino::Camino(std::pair<int, int> c, int h)
+Camino::Camino(std::pair<int, int> c, double h)
 {
 	this->pasos = std::vector <std::pair<int, int>>();
 	this->esta = c;
@@ -29,7 +29,7 @@ int Camino::getValor() {
 	return this->heuristica + this->pasos.size() - 1;
 }
 
-void Camino::agregar(std::pair<int, int> a, int h) {
+void Camino::agregar(std::pair<int, int> a, double h) {
 	this->esta = a;
 	this->pasos.push_back(a);
 	this->heuristica = h;

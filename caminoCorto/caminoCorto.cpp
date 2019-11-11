@@ -191,8 +191,8 @@ void imprimirMapa(std::vector<std::vector<char>> mapa) {
 	}
 }
 
-int heurist(std::pair<int, int> posIA, std::pair<int, int> posObj) {
-	return std::sqrt((posIA.first - posObj.first)^2 + (posIA.second - posObj.second)^2);
+double heurist(std::pair<int, int> posIA, std::pair<int, int> posObj) {
+	return std::abs(posIA.first - posObj.first) + std::abs(posIA.second - posObj.second);
 }
 
 bool estaOK(std::pair<int, int> a, int ancho, int alto) {
@@ -212,9 +212,18 @@ std::vector<std::pair<int, int>> expandir(std::pair<int, int> a) {
 	return retornar;
 }
 
-bool isVisitado(std::pair<int, int> a, std::vector<std::pair<int, int>> visitados) {
-	for (int i = 0; i < visitados.size(); i++) {
-		if (visitados[i].first == a.first && visitados[i].second == a.second) {
+bool isVisitado(std::pair<int, int> a, std::vector<Camino> caminos) {
+	for (int i = 0; i < caminos.size(); i++) {
+		if (caminos[i].esta.first == a.first && caminos[i].esta.second == a.second) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool isVisitado(std::pair<int, int> a, std::vector<std::pair<int, int>> caminos) {
+	for (int i = 0; i < caminos.size(); i++) {
+		if (caminos[i].first == a.first && caminos[i].second == a.second) {
 			return true;
 		}
 	}
@@ -224,7 +233,7 @@ bool isVisitado(std::pair<int, int> a, std::vector<std::pair<int, int>> visitado
 
 Camino aStar(std::vector<std::vector<char>> mapa, std::pair<int, int> posIA, std::pair<int, int> posObj, int ancho, int alto) {
 	// inicializo variables
-	std::vector<std::pair<int, int>> visitados = std::vector<std::pair<int, int>>();
+	std::vector<std::pair<int, int> > visitados = std::vector<std::pair<int, int> >();
 	int index = 0;
 	std::vector<Camino> caminos;
 	Camino aux = Camino();
@@ -234,7 +243,7 @@ Camino aStar(std::vector<std::vector<char>> mapa, std::pair<int, int> posIA, std
 	// while principal
 	while (caminos.size() != 0) {
 		// busco el menor (el que este mas cerca del objetivo)
-		int menor = caminos[0].getValor();
+		double menor = caminos[0].getValor();
 		index = 0;
 		for (int i = 0; i < caminos.size(); i++) {
 			if (menor > caminos[i].getValor()) {
@@ -244,19 +253,21 @@ Camino aStar(std::vector<std::vector<char>> mapa, std::pair<int, int> posIA, std
 		}
 		// pasar a cerrados
 		std::pair<int, int> aux = caminos[index].esta;
-		visitados.push_back(aux);
 		std::cout << "X: " << aux.first << " Y: " << aux.second << std::endl;
+		visitados.push_back(aux);
 		// si llego a la meta se sale del while
 		if (aux.first == posObj.first && aux.second == posObj.second) break;
 		// expandir
 		std::vector<std::pair<int, int>> expandidos = expandir(aux);
 		for (int i = 0; i < expandidos.size(); i++) {
 			// no se sale de los bordes y no esta visitado
-			if (estaOK(expandidos[i], ancho, alto) && !isVisitado(expandidos[i], visitados)) {
-				Camino nuevo = caminos[index];
-				nuevo.agregar(expandidos[i], heurist(expandidos[i], posObj));
-				// se agrega a caminos activos
-				caminos.push_back(nuevo);
+			if (estaOK(expandidos[i], ancho, alto)) {
+				if (!isVisitado(expandidos[i], caminos) && !isVisitado(expandidos[i], visitados)) {
+					Camino nuevo = caminos[index];
+					nuevo.agregar(expandidos[i], heurist(expandidos[i], posObj));
+					// se agrega a caminos activos
+					caminos.push_back(nuevo);
+				}
 			}
 		}
 		// se borra de los caminos activos
