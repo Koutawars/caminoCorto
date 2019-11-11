@@ -18,7 +18,7 @@
 #define KEY_RIGHT 77
 
 
-void imprimirMapa(std::vector<std::vector<char>> mapa);
+void imprimirMapa(std::vector<std::vector<char>> mapa, int  x, int j,int t);
 bool comp(std::pair<int, int> a, std::pair<int, int> b);
 Camino aStar(std::vector<std::vector<char>> mapa, std::pair<int, int> posIA, std::pair<int, int> posObj, int ancho, int alto);
 int main()
@@ -60,7 +60,8 @@ int main()
 		system("cls");
 		int pasosIa = 0;
 		while (!comp(objetivo, ia) && !comp(objetivo, player)) {
-			imprimirMapa(mapa);
+			imprimirMapa(mapa, ia.first,ia.second,1);
+			imprimirMapa(mapa, player.first, player.second,0);
 			c = _getch();
 			printf("tecla: %d \n", c);
 			if (c == 49) {
@@ -144,7 +145,8 @@ int main()
 			system("cls");
 		}
 		do {
-			imprimirMapa(mapa);
+			imprimirMapa(mapa, ia.first, ia.second,1);
+			imprimirMapa(mapa, player.first, player.second,0);
 			if (comp(objetivo, ia) && !comp(objetivo, player))
 				std::cout << "------------  PERDISTE -------------" << std::endl;
 			else if (!comp(objetivo, ia) && comp(objetivo, player))
@@ -182,13 +184,30 @@ bool comp(std::pair<int, int> a, std::pair<int, int> b) {
 	return (a.first == b.first && a.second == b.second);
 }
 
-void imprimirMapa(std::vector<std::vector<char>> mapa) {
+void imprimirMapa(std::vector<std::vector<char>> mapa, int  x, int y, int t) {
 	for (int i = 0; i < mapa.size(); i++) {
 		for (int j = 0; j < mapa[i].size(); j++) {
-			std::cout << "[" << mapa[i][j] << "] ";
+			if (i == x && j == y) {
+				if (t == 0) {
+					std::cout << "[" << "P" << "] ";
+				}
+				else {
+					std::cout << "[" << "I" << "] ";
+				}
+			}
+			else if( t == 0 && mapa[i][j] != 'I'){
+				std::cout << "[" << mapa[i][j] << "] ";
+			}else if (t == 1 && mapa[i][j] != 'P') {
+				std::cout << "[" << mapa[i][j] << "] ";
+			}
+			else {
+				std::cout << "[" <<" " << "] ";
+			}
 		}
 		std::cout << std::endl;
 	}
+	std::cout << std::endl;
+	std::cout << std::endl;
 }
 
 double heurist(std::pair<int, int> posIA, std::pair<int, int> posObj) {
