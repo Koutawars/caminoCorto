@@ -8,6 +8,8 @@
 #include<time.h>
 #include <conio.h>
 #include <windows.h>
+#include <cmath>
+#include "Camino.h"
 
 // constante teclas
 #define KEY_UP 72
@@ -18,9 +20,7 @@
 
 void imprimirMapa(std::vector<std::vector<char>> mapa);
 bool comp(std::pair<int, int> a, std::pair<int, int> b);
-
-
-
+Camino aStar(std::vector<std::vector<char>> mapa, std::pair<int, int> posIA, std::pair<int, int> posObj, int ancho, int alto);
 int main()
 {
 	srand(time(NULL));
@@ -55,6 +55,10 @@ int main()
 		mapa[objetivo.first][objetivo.second] = 'X'; 
 		int c;
 		bool seMueve = false, volver = false;
+		std::cout << "pensando..." << std::endl;
+		Camino respuesta = aStar(mapa, ia, objetivo, ancho, alto);
+		system("cls");
+		int pasosIa = 0;
 		while (!comp(objetivo, ia) && !comp(objetivo, player)) {
 			imprimirMapa(mapa);
 			c = _getch();
@@ -129,6 +133,10 @@ int main()
 			}
 			if (seMueve) {
 				// mover ia
+				mapa[ia.first][ia.second] = ' ';
+				pasosIa++;
+				ia.first = respuesta.pasos[pasosIa].first;
+				ia.second = respuesta.pasos[pasosIa].second;
 				mapa[ia.first][ia.second] = iaChar;
 				mapa[objetivo.first][objetivo.second] = 'X';
 				seMueve = false;
@@ -165,11 +173,10 @@ int main()
 		if (!volver) break;
 	}
 
-
-
 	system("pause");
 	return 0;
 }
+
 
 bool comp(std::pair<int, int> a, std::pair<int, int> b) {
 	return (a.first == b.first && a.second == b.second);
@@ -182,4 +189,79 @@ void imprimirMapa(std::vector<std::vector<char>> mapa) {
 		}
 		std::cout << std::endl;
 	}
+}
+
+int heurist(std::pair<int, int> posIA, std::pair<int, int> posObj) {
+	return std::sqrt((posIA.first - posObj.first)^2 + (posIA.second - posObj.second)^2);
+}
+
+bool estaOK(std::pair<int, int> a, int ancho, int alto) {
+	return (a.first >= 0 && a.second >= 0 && a.first < alto && a.second < alto);
+}
+
+std::vector<std::pair<int, int>> expandir(std::pair<int, int> a) {
+	std::vector<std::pair<int, int>> retornar = std::vector<std::pair<int, int>>();
+	retornar.push_back(std::make_pair(a.first - 1, a.second));
+	retornar.push_back(std::make_pair(a.first + 1, a.second));
+	retornar.push_back(std::make_pair(a.first, a.second - 1));
+	retornar.push_back(std::make_pair(a.first, a.second + 1));
+	retornar.push_back(std::make_pair(a.first + 1, a.second - 1));
+	retornar.push_back(std::make_pair(a.first + 1, a.second + 1));
+	retornar.push_back(std::make_pair(a.first - 1, a.second - 1));
+	retornar.push_back(std::make_pair(a.first - 1, a.second + 1));
+	return retornar;
+}
+
+bool isVisitado(std::pair<int, int> a, std::vector<std::pair<int, int>> visitados) {
+	for (int i = 0; i < visitados.size(); i++) {
+		if (visitados[i].first == a.first && visitados[i].second == a.second) {
+			return true;
+		}
+	}
+	return false;
+}
+
+
+Camino aStar(std::vector<std::vector<char>> mapa, std::pair<int, int> posIA, std::pair<int, int> posObj, int ancho, int alto) {
+	// inicializo variables
+	std::vector<std::pair<int, int>> visitados = std::vector<std::pair<int, int>>();
+	int index = 0;
+	std::vector<Camino> caminos;
+	Camino aux = Camino();
+	// agregar a visitados y el comienzo del camino
+	aux.agregar(posIA, heurist(posIA, posObj));
+	caminos.push_back(aux);
+	// while principal
+	while (caminos.size() != 0) {
+		// busco el menor (el que este mas cerca del objetivo)
+		int menor = caminos[0].getValor();
+		index = 0;
+		for (int i = 0; i < caminos.size(); i++) {
+			if (menor > caminos[i].getValor()) {
+				menor = caminos[i].getValor();
+				index = i;
+			}
+		}
+		// pasar a cerrados
+		std::pair<int, int> aux = caminos[index].esta;
+		visitados.push_back(aux);
+		std::cout << "X: " << aux.first << " Y: " << aux.second << std::endl;
+		// si llego a la meta se sale del while
+		if (aux.first == posObj.first && aux.second == posObj.second) break;
+		// expandir
+		std::vector<std::pair<int, int>> expandidos = expandir(aux);
+		for (int i = 0; i < expandidos.size(); i++) {
+			// no se sale de los bordes y no esta visitado
+			if (estaOK(expandidos[i], ancho, alto) && !isVisitado(expandidos[i], visitados)) {
+				Camino nuevo = caminos[index];
+				nuevo.agregar(expandidos[i], heurist(expandidos[i], posObj));
+				// se agrega a caminos activos
+				caminos.push_back(nuevo);
+			}
+		}
+		// se borra de los caminos activos
+		caminos.erase(caminos.begin() + index);
+	}
+	
+	return caminos[index];
 }
